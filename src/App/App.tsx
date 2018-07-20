@@ -1,53 +1,84 @@
 import * as React from 'react';
 
 import Slider, { ESlider } from './components/Slider/Slider';
+import AddIngredient from './components/AddIngredient/AddIngredient';
 
 import './App.scss';
 
-type IState = {
-  produceAmount: string;
-  pg: string;
-  vg: string;
+type Ingredient = {
+  name: string;
+  amount: number;
 };
 
-class App extends React.Component<{}, IState> {
+type State = {
+  produceAmount: number;
+  pg: number;
+  vg: number;
+  ingredients: Array<Ingredient>;
+};
+
+class App extends React.Component<{}, State> {
   state = {
-    produceAmount: '10',
-    pg: '50',
-    vg: '50',
+    produceAmount: 10,
+    pg: 50,
+    vg: 50,
+    ingredients: [],
   };
 
   calculateAmounts = () => {
     const { produceAmount, pg, vg } = this.state;
 
     return {
-      pg: (Number(pg) / 100 * Number(produceAmount)).toFixed(2),
-      vg: (Number(vg) / 100 * Number(produceAmount)).toFixed(2),
+      pg: Number((pg / 100 * produceAmount).toFixed(2)),
+      vg: Number((vg / 100 * produceAmount).toFixed(2)),
     };
   }
 
   setProduceAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({
-      produceAmount: e.currentTarget.value,
+      produceAmount: Number(e.currentTarget.value),
     });
   }
 
   setSliderValue = (type: ESlider) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const oppositeValue = String(100 - Number(e.currentTarget.value));
+    const eventValue = Number(e.currentTarget.value);
+    const oppositeValue = 100 - eventValue;
 
     const state = type === ESlider.PG ? {
-      pg: e.currentTarget.value,
+      pg: eventValue,
       vg: oppositeValue,
     } : {
-      pg: oppositeValue,
-      vg: e.currentTarget.value,
-    };
+        pg: oppositeValue,
+        vg: eventValue,
+      };
 
     this.setState(state);
   }
 
+  addIngredient = (currentIngredient: Ingredient) => {
+    this.setState((state: State) => {
+      const { ingredients } = state;
+      const duplicateIndex = ingredients.findIndex(({ name }: Ingredient) => name === currentIngredient.name);
+
+      return duplicateIndex >= 0 ? {
+        ...state,
+        ingredients: [
+          ...ingredients.slice(0, duplicateIndex),
+          currentIngredient,
+          ...ingredients.slice(duplicateIndex + 1),
+        ],
+      } : {
+        ...state,
+        ingredients: [
+          ...ingredients,
+          currentIngredient,
+        ],
+      };
+    });
+  }
+
   render() {
-    const { calculateAmounts, state, setProduceAmount, setSliderValue } = this;
+    const { calculateAmounts, state, setProduceAmount, setSliderValue, addIngredient } = this;
     const { pg: calculatedPg, vg: calculatedVg } = calculateAmounts();
 
     return (
@@ -66,6 +97,12 @@ class App extends React.Component<{}, IState> {
           value={state.vg}
           onChange={setSliderValue(ESlider.VG)}
         />
+        <div>
+          {state.ingredients.map(({ name, amount }: Ingredient, i: number) => (
+            <p key={i}>{name}: {amount}</p>
+          ))}
+          <AddIngredient onChange={addIngredient} />
+        </div>
         <p>PG: {calculatedPg}ml</p>
         <p>VG: {calculatedVg}ml</p>
       </div>

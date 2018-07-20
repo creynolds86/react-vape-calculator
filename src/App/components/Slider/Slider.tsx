@@ -4,7 +4,7 @@ import './Slider.scss';
 
 type IProps = {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  value: string;
+  value: number;
 };
 
 export enum ESlider {
